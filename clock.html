@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Broken Promises Clock</title>
+<style>
+    body {
+        background-color: #2e2e2e;
+        color: #e0e0e0;
+        font-family: 'Courier New', Courier, monospace;
+        text-align: center;
+        padding: 20px;
+    }
+    body.no-scroll {
+    overflow: hidden;
+}
+
+
+    h1 {
+        font-size: 2em;
+        margin-bottom: 30px;
+    }
+
+    #clock {
+        position: relative;
+        width: 500px;
+        height: 500px;
+        margin: 0 auto;
+        border: 10px solid #666;
+        border-radius: 50%;
+        background: #1a1a1a;
+    }
+
+    .hand {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform-origin: center bottom;
+        background: #e0e0e0;
+    }
+
+    .second-hand {
+        height: 45%;
+        width: 2px;
+    }
+
+    .minute-hand {
+        height: 40%;
+        width: 4px;
+        background: #ccc;
+    }
+
+    .hour-hand {
+        height: 30%;
+        width: 6px;
+        background: #999;
+    }
+
+    .labels {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        font-size: 1em;
+    }
+
+    .labels div {
+        position: absolute;
+        width: 80px;
+        text-align: center;
+        transform: translate(-50%, -50%);
+        color: #ccc;
+    }
+
+    #debtCounter {
+        margin-top: 30px;
+        font-size: 1.5em;
+    }
+
+    #quote {
+        margin-top: 20px;
+        font-style: italic;
+        font-size: 1.2em;
+        opacity: 0.7;
+    }
+
+
+    #newsTicker {
+    width: 100%;
+    overflow: hidden;
+    background: #8b0000;
+    color: white;
+    font-weight: bold;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1em;
+    padding: 10px 0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.7);
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 9999;
+    white-space: nowrap;
+}
+
+.ticker-track {
+    display: inline-block;
+    white-space: nowrap;
+    animation: scrollTicker 15s linear infinite;
+}
+
+@keyframes scrollTicker {
+    0% {
+        transform: translateX(100%);
+    }
+    100% {
+        transform: translateX(-100%);
+    }
+}
+
+
+
+.popup {
+    position: absolute;
+    background: lightyellow;
+    border: 3px solid red;
+    color: black;
+    padding: 10px;
+    font-family: 'Arial', sans-serif;
+    font-size: 1em;
+    width: 250px;
+    pointer-events: auto;
+    box-shadow: 0 0 20px orangered;
+    text-align: center;
+    animation: flicker 1.5s infinite alternate;
+}
+
+.popup h3 {
+    font-size: 1.2em;
+    color: darkblue;
+    margin-bottom: 5px;
+}
+
+.popup p {
+    font-size: 0.9em;
+    margin-bottom: 10px;
+}
+
+.popup button {
+    background-color: limegreen;
+    color: black;
+    border: 2px solid darkgreen;
+    padding: 5px 10px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close-btn {
+    position: absolute;
+    top: 5px;
+    right: 8px;
+    font-size: 1.2em;
+    cursor: pointer;
+    color: red;
+    font-weight: bold;
+}
+
+.hope-button {
+    margin-top: 30px;
+    font-size: 1.5em;
+    padding: 10px 20px;
+    background-color: lightcoral;
+    color: white;
+    border: 1px solid red;
+    font-weight: bold;
+    cursor: pointer;
+    animation: blink 1s infinite alternate;
+    box-shadow: 0 0 5px red, 0 0 10px orange;
+}
+
+
+</style>
+</head>
+<body>
+    <div id="newsTicker">
+        <div class="ticker-track" id="tickerTrack">
+          🔥 BREAKING: Student debt reaches historic highs — promises broken — hope deferred — consequences unfolding... 🔥 
+        </div>
+      </div>
+      
+    
+    
+<h1>The Time for Change Was Yesterday.</h1>
+
+<div id="clock">
+    <div class="hand hour-hand" id="hourHand"></div>
+    <div class="hand minute-hand" id="minuteHand"></div>
+    <div class="hand second-hand" id="secondHand"></div>
+
+    <div class="labels" id="labels"></div>
+</div>
+
+<div id="debtCounter">
+    Student Debt Total: $<span id="debtAmount">1960000000000</span>
+</div>
+
+<div id="quote">"Trust the system."</div>
+<div id="popupContainer"></div>
+<button id="hopeButton" class="hope-button">CLICK HERE FOR CHANGE</button>
+
+<script>
+    document.body.classList.add('no-scroll');
+
+const promises = [
+    "Free college by 2020",
+    "College will pay for itself",
+    "Just get scholarships",
+    "Loans are good debt",
+    "It'll be forgiven",
+    "You'll earn it back",
+    "Everyone has debt",
+    "Education is priceless",
+    "It's an investment",
+    "You can refinance later",
+    "Income-based repayment",
+    "Default isn't the end"
+];
+
+const labelsDiv = document.getElementById('labels');
+for (let i = 0; i < 12; i++) {
+    const label = document.createElement('div');
+    const angle = (i / 12) * 360;
+    label.style.left = `${50 + 45 * Math.cos((angle - 90) * Math.PI/180)}%`;
+    label.style.top = `${50 + 45 * Math.sin((angle - 90) * Math.PI/180)}%`;
+    label.innerText = promises[i];
+    labelsDiv.appendChild(label);
+}
+
+const secondHand = document.getElementById('secondHand');
+const minuteHand = document.getElementById('minuteHand');
+const hourHand = document.getElementById('hourHand');
+const debtAmountSpan = document.getElementById('debtAmount');
+const quoteDiv = document.getElementById('quote');
+
+let seconds = 0;
+let minutes = 0;
+let hours = 0;
+let debtAmount = 1960000000000;
+const quotes = [
+    "Don't worry, your degree will pay for itself!",
+    "Debt is just an investment in your future.",
+    "Relief is just one election away!",
+    "Trust the system."
+];
+
+popup_timer = 2000;
+
+function updateClock() {
+    smooth = 100;
+    seconds += 360/60/smooth;
+    minutes += 360/60/10/smooth;
+    hours += 0.008333/smooth; // 360 degrees / (12 hours * 3600 seconds)
+
+    secondHand.style.transform = `translate(-50%, -100%) rotate(${seconds}deg)`;
+    minuteHand.style.transform = `translate(-50%, -100%) rotate(${minutes}deg)`;
+    hourHand.style.transform = `translate(-50%, -100%) rotate(${hours}deg)`;
+
+    debtAmount += Math.floor(Math.random() * 5000 + 1000);
+    debtAmountSpan.textContent = debtAmount.toLocaleString();
+}
+
+function changeQuote() {
+    const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+    quoteDiv.textContent = `"${randomQuote}"`;
+}
+const popupPalettes = [
+    { background: "#fff8dc", border: "#ff4500", text: "#000", button: "#00b300" }, // warm scammy
+    { background: "#e0ffff", border: "#00008b", text: "#000", button: "#1e90ff" }, // cold official
+    { background: "#ffe4e1", border: "#ff1493", text: "#000", button: "#ff69b4" }, // soft pink fake help
+    { background: "#ffffe0", border: "#daa520", text: "#000", button: "#ffd700" }, // gold fake luxury
+    { background: "#f5f5f5", border: "#708090", text: "#000", button: "#4682b4" }, // sad corporate
+    { background: "#fff0f5", border: "#db7093", text: "#000", button: "#c71585" }, // desperate romantic scam
+];
+
+
+const popupAds = [
+    {
+        title: "ACT NOW!",
+        message: "Get your loans forgiven* today!",
+        button: "Apply Here"
+    },
+    {
+        title: "Congratulations!",
+        message: "You've been pre-approved for 0% forgiveness!",
+        button: "Claim Reward"
+    },
+    {
+        title: "Special Offer!",
+        message: "Lock in a 25-year repayment plan!",
+        button: "Sign Up"
+    },
+    {
+        title: "Official Notice",
+        message: "Student debt is good debt. Learn why!",
+        button: "Learn More"
+    },
+    {
+        title: "LIMITED TIME!",
+        message: "Only 40 more years of payments!",
+        button: "Get Started"
+    },
+    {
+        title: "Exclusive Deal!",
+        message: "Refinance now for just 10.99% APR!",
+        button: "Refinance"
+    },
+    // 🔥 NEW ONES BELOW:
+    {
+        title: "URGENT!",
+        message: "Mandatory Debt Happiness Survey. Participation required!",
+        button: "Begin Survey"
+    },
+    {
+        title: "Breaking News",
+        message: "Interest rates slashed by 0.0001%! Celebrate now!",
+        button: "Celebrate"
+    },
+    {
+        title: "Exclusive Opportunity",
+        message: "Trade your future earnings for instant relief!",
+        button: "Trade Now"
+    },
+    {
+        title: "Government Update",
+        message: "You may qualify for forgiveness if born on February 29th.",
+        button: "Check Eligibility"
+    },
+    {
+        title: "New Horizons!",
+        message: "Graduate today, pay forever!",
+        button: "Explore Options"
+    },
+    {
+        title: "You've Earned It!",
+        message: "An exciting new loan has been pre-approved for you!",
+        button: "Accept Reward"
+    },
+    {
+        title: "Security Alert!",
+        message: "Unpaid loans detected. Immediate action required!",
+        button: "Resolve Now"
+    },
+    {
+        title: "Special Congrats!",
+        message: "You're only $200,000 away from financial freedom!",
+        button: "Finish Strong"
+    },
+    {
+        title: "Low Monthly Payments!",
+        message: "Only 300 easy payments away from debt freedom!",
+        button: "See Plan"
+    }
+];
+
+
+function spawnPopup() {
+    const ad = popupAds[Math.floor(Math.random() * popupAds.length)];
+    const palette = popupPalettes[Math.floor(Math.random() * popupPalettes.length)];
+
+    const popup = document.createElement('div');
+    popup.className = 'popup';
+
+    popup.innerHTML = `
+    <span class="close-btn">&times;</span>
+    <h3>${ad.title}</h3>
+    <p>${ad.message}</p>
+    <button>${ad.button}</button>
+    `;
+
+    popup.style.top = Math.random() * 90 + '%';
+    popup.style.left = Math.random() * 90 + '%';
+
+    // Apply random palette
+    popup.style.backgroundColor = palette.background;
+    popup.style.border = `3px solid ${palette.border}`;
+    popup.style.color = palette.text;
+
+    const button = popup.querySelector('button');
+    button.style.backgroundColor = palette.button;
+    button.style.border = `2px solid ${palette.border}`;
+    button.style.color = "#000"; // Black button text for legibility
+
+    document.getElementById('popupContainer').appendChild(popup);
+
+    // Scam button behavior
+    button.onclick = () => {
+        spawnPopup();
+    };
+
+    // Close button behavior
+    const closeBtn = popup.querySelector('.close-btn');
+    closeBtn.onclick = (e) => {
+        e.stopPropagation();
+        popup.remove();
+        if (popup_timer >= 800) {
+            popup_timer *= 0.85;
+            clearInterval(popupInterval);
+            popupInterval = setInterval(spawnPopup, popup_timer);
+        }
+    };
+}
+
+
+function spawnPopupAt(x, y) {
+    const ad = popupAds[Math.floor(Math.random() * popupAds.length)];
+    const popup = document.createElement('div');
+    popup.className = 'popup';
+
+    popup.innerHTML = `
+    <span class="close-btn">&times;</span>
+    <h3>${ad.title}</h3>
+    <p>${ad.message}</p>
+    <button>${ad.button}</button>
+    `;
+
+    popup.style.top = `${y-50}px`;
+    popup.style.left = `${x-250/2}px`;
+
+    document.getElementById('popupContainer').appendChild(popup);
+
+    const button = popup.querySelector('button');
+    button.onclick = () => {
+        spawnPopup();
+    };
+
+    const closeBtn = popup.querySelector('.close-btn');
+    closeBtn.onclick = (e) => {
+        e.stopPropagation();
+        popup.remove();
+        if (popup_timer >= 300) {
+            popup_timer *= 0.55;
+            // clearInterval(popupInterval);
+            popupInterval = setInterval(spawnPopup, popup_timer);
+        }
+    };
+}
+
+
+const hopeButton = document.getElementById('hopeButton');
+
+hopeButton.onmousemove = (e) => {
+    spawnPopupAt(e.clientX, e.clientY);
+};
+
+
+// setInterval(spawnPopup, popup_timer);
+
+setInterval(updateClock, 10);
+setInterval(changeQuote, 15000);
+</script>
+
+</body>
+</html>
